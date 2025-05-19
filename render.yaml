@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: bsw-webhook-bot-neu
+    env: python
+    plan: free
+    buildCommand: ""
+    startCommand: python webhook.py
