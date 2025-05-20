@@ -10,18 +10,19 @@ NICOLE_MAIL = "judith.raithel@icloud.com"
 
 app = Flask(__name__)
 
-@app.route("/trello-webhook", methods=["POST"])
-def webhook_handler():
-    daten = request.json
-    if not daten:
-        return jsonify({"status": "Verifiziert"}), 200
+@app.route("/trello-webhook", methods=["GET", "POST"])
+def empfang():
+    if request.method == "GET":
+        return "✅ Trello Webhook erreichbar (GET für Validierung)", 200
 
+    daten = request.json  # ← das war bisher zu früh entfernt
     action = daten.get("action", {})
     typ = action.get("type")
     karte = action.get("data", {}).get("card", {})
     titel = karte.get("name", "📝 (Unbekannt)")
     user = action.get("memberCreator", {}).get("fullName", "jemand")
     ziel = action.get("data", {}).get("listAfter", {}).get("name", "")
+
 
     print(f"📥 Webhook erkannt: Typ={typ} | Titel={titel} | Liste={ziel} | User={user}")
 
