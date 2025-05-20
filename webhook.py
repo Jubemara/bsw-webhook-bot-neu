@@ -15,7 +15,6 @@ def empfang():
     if request.method == "GET":
         return "✅ Trello Webhook erreichbar (GET für Validierung)", 200
 
-    # 🧠 Absicherung: leere oder ungültige JSONs von Trello ignorieren
     try:
         daten = request.get_json(force=True, silent=True) or {}
     except Exception as e:
@@ -24,39 +23,46 @@ def empfang():
     if not daten:
         return "🟡 Leere POST-Anfrage – vermutlich Validierung durch Trello", 200
 
-    # 🔁 Rest wie gehabt
     action = daten.get("action", {})
     typ = action.get("type")
     karte = action.get("data", {}).get("card", {})
     titel = karte.get("name", "📝 (Unbekannt)")
     user = action.get("memberCreator", {}).get("fullName", "jemand")
     ziel = action.get("data", {}).get("listAfter", {}).get("name", "")
+    liste = action.get("data", {}).get("list", {}).get("name", "")
 
+    print(f"📥 Webhook erkannt: Typ={typ} | Titel={titel} | Liste={ziel or liste} | User={user}")
 
+    # 🟢 Neue Karte
+    if typ == "createCard":
+        betreff = f"🆕 Neue Karte von {user}"
+        text = f"{user} hat eine neue Karte »{titel}« in der Liste »{liste}« erstellt."
 
-    print(f"📥 Webhook erkannt: Typ={typ} | Titel={titel} | Liste={ziel} | User={user}")
+        if liste in ["Ideen / Vorschläge von BSW", "Freigegeben", "Zur Überprüfung"]:
+            send_mail(JUDITH_MAIL, betreff, text)
+        if liste in ["Zur Überprüfung", "Ideen / Vorschläge von Raithel Design", "Redaktionspläne"]:
+            send_mail(NICOLE_MAIL, betreff, text)
 
-    if typ == "updateCard" and ziel:
+    # 🔁 Karten verschieben
+    elif typ == "updateCard" and ziel:
         betreff = f"📦 Karte verschoben von {user}"
         text = f"{user} hat die Karte »{titel}« in die Liste »{ziel}« verschoben."
 
-        if ziel == "Ideen / Vorschläge von BSW":
+        if ziel in ["Ideen / Vorschläge von BSW", "Freigegeben", "Zur Überprüfung"]:
             send_mail(JUDITH_MAIL, betreff, text)
-        elif ziel in ["Ideen / Vorschläge von Raithel Design", "Redaktionspläne", "Zur Überprüfung"]:
+        if ziel in ["Zur Überprüfung", "Ideen / Vorschläge von Raithel Design", "Redaktionspläne"]:
             send_mail(NICOLE_MAIL, betreff, text)
-        elif ziel == "Freigegeben":
-            send_mail(JUDITH_MAIL, betreff, text)
 
+    # 💬 Kommentar
     elif typ == "commentCard":
         kommentar = action["data"].get("text", "(kein Text)")
         betreff = f"💬 Kommentar zu »{titel}«"
         text = f"{user} hat kommentiert:\n{kommentar}"
-        liste = action.get("data", {}).get("list", {}).get("name", "")
 
-        if liste == "Ideen / Vorschläge von BSW":
+        if liste in ["Ideen / Vorschläge von BSW", "Freigegeben", "Zur Überprüfung"]:
             send_mail(JUDITH_MAIL, betreff, text)
-        elif liste in ["Zur Überprüfung", "Freigegeben"]:
-            send_mail(JUDITH_MAIL, betreff, text)
+        if liste in ["Zur Überprüfung", "Ideen / Vorschläge von Raithel Design", "Redaktionspläne"]:
+            send_mail(NICOLE_MAIL, betreff, text)
 
     return jsonify({"status": "ok"}), 200
 
