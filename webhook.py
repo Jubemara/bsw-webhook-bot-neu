@@ -15,14 +15,22 @@ def empfang():
     if request.method == "GET":
         return "✅ Trello Webhook erreichbar (GET für Validierung)", 200
 
+    # 🚀 DEBUG: Ankunft bestätigen
+    print("🚀 POST-Request angekommen")
+
+    # 🧠 JSON laden + Fehler auffangen
     try:
         daten = request.get_json(force=True, silent=True) or {}
+        print(f"📦 Empfangene Daten: {daten}")  # <- WICHTIG
     except Exception as e:
+        print(f"❌ JSON-Fehler: {str(e)}")
         return f"⚠️ Fehlerhafte JSON-Struktur: {str(e)}", 415
 
     if not daten:
+        print("⚠️ WARNUNG: daten ist leer!")
         return "🟡 Leere POST-Anfrage – vermutlich Validierung durch Trello", 200
 
+    # 🧩 Entpacken der wichtigsten Werte
     action = daten.get("action", {})
     typ = action.get("type")
     karte = action.get("data", {}).get("card", {})
@@ -31,7 +39,11 @@ def empfang():
     ziel = action.get("data", {}).get("listAfter", {}).get("name", "")
     liste = action.get("data", {}).get("list", {}).get("name", "")
 
+    # 📍LOGGEN was erkannt wurde
     print(f"📥 Webhook erkannt: Typ={typ} | Titel={titel} | Liste={ziel or liste} | User={user}")
+
+    return jsonify({"status": "ok"}), 200
+
 
     # 🟢 Neue Karte
     if typ == "createCard":
