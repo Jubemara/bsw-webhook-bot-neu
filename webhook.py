@@ -21,7 +21,7 @@ def empfang():
     # 🧠 JSON laden + Fehler auffangen
     try:
         daten = request.get_json(force=True, silent=True) or {}
-        print(f"📦 Empfangene Daten: {daten}")  # <- WICHTIG
+        print(f"📦 Empfangene Daten: {daten}")
     except Exception as e:
         print(f"❌ JSON-Fehler: {str(e)}")
         return f"⚠️ Fehlerhafte JSON-Struktur: {str(e)}", 415
@@ -41,9 +41,6 @@ def empfang():
 
     # 📍LOGGEN was erkannt wurde
     print(f"📥 Webhook erkannt: Typ={typ} | Titel={titel} | Liste={ziel or liste} | User={user}")
-
-    return jsonify({"status": "ok"}), 200
-
 
     # 🟢 Neue Karte
     if typ == "createCard":
@@ -77,6 +74,7 @@ def empfang():
             send_mail(NICOLE_MAIL, betreff, text)
 
     return jsonify({"status": "ok"}), 200
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
