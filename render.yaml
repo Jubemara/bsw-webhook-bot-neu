@@ -3,5 +3,6 @@ services:
     name: bsw-webhook-bot-neu
     env: python
     plan: free
-    buildCommand: ""
-    startCommand: python webhook.py
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python3 webhook.py"
+    autoDeploy: true
